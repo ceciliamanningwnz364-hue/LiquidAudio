@@ -1,37 +1,34 @@
-name: Build iOS IPA
-on:
-push:
-branches: [ "main", "master" ]
-workflow_dispatch:
-jobs:
-build-ipa:
-runs-on: macos-14
-steps:
-- name: Скачивание репозитория
-uses: actions/checkout@v4
-- name: Установка XcodeGen
-run: brew install xcodegen
-- name: Генерация Xcode проекта
-run: xcodegen generate
-- name: Сборка приложения (Release + Оптимизация)
-run: |
-xcodebuild -project LiquidAudio.xcodeproj 
--scheme LiquidAudio 
--configuration Release 
--derivedDataPath build 
--sdk iphoneos 
-CODE_SIGN_IDENTITY="" 
-CODE_SIGNING_REQUIRED=NO 
-CODE_SIGNING_ALLOWED=NO 
-SWIFT_OPTIMIZATION_LEVEL="-O" 
-clean build
-- name: Упаковка в .ipa
-run: |
-mkdir -p Payload
-cp -r build/Build/Products/Release-iphoneos/LiquidAudio.app Payload/
-zip -r9 LiquidAudio.ipa Payload
-- name: Выгрузка готового .ipa файла
-uses: actions/upload-artifact@v4
-with:
-name: LiquidAudio-iPhone14Pro-IPA
-path: LiquidAudio.ipa
+{
+"name": "Build iOS IPA",
+"on": {
+"push": { "branches": ["main", "master"] },
+"workflow_dispatch": null
+},
+"jobs": {
+"build-ipa": {
+"runs-on": "macos-14",
+"steps": [
+{
+"name": "Checkout",
+"uses": "actions/checkout@v4"
+},
+{
+"name": "Install XcodeGen",
+"run": "brew install xcodegen"
+},
+{
+"name": "Generate Project & Build IPA",
+"run": "printf 'name: LiquidAudio\noptions:\n  bundleIdPrefix: com.iphone14pro\n  deploymentTarget:\n    iOS: "16.0"\ntargets:\n  LiquidAudio:\n    type: application\n    platform: iOS\n    sources:\n      - LiquidAudioApp.swift\n    info:\n      path: Info.plist\n      properties:\n        CFBundleDisplayName: LiquidAudio\n        UILaunchScreen: {}\n        UIBackgroundModes:\n          - audio\n        CADisableMinimumFrameDurationOnPhone: true\n        UIFileSharingEnabled: true\n        LSSupportsOpeningDocumentsInPlace: true\n        UISupportedInterfaceOrientations:\n          - UIInterfaceOrientationPortrait\n    settings:\n      base:\n        PRODUCT_BUNDLE_IDENTIFIER: com.liquidglass.audioplayer\n        MARKETING_VERSION: 1.0.0\n        CURRENT_PROJECT_VERSION: 1\n        SWIFT_VERSION: 5.0\n        CODE_SIGN_IDENTITY: ""\n        CODE_SIGNING_REQUIRED: NO\n        CODE_SIGNING_ALLOWED: NO\n' > project.yml && xcodegen generate && xcodebuild -project LiquidAudio.xcodeproj -scheme LiquidAudio -configuration Release -derivedDataPath build -sdk iphoneos CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO SWIFT_OPTIMIZATION_LEVEL="-O" clean build && mkdir -p Payload && cp -r build/Build/Products/Release-iphoneos/LiquidAudio.app Payload/ && zip -r9 LiquidAudio.ipa Payload"
+},
+{
+"name": "Upload IPA",
+"uses": "actions/upload-artifact@v4",
+"with": {
+"name": "LiquidAudio-iPhone14Pro-IPA",
+"path": "LiquidAudio.ipa"
+}
+}
+]
+}
+}
+}
